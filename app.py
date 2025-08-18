@@ -111,11 +111,9 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
                 {
                     "role": "system",
                     "content": (
-                        "You are a medical assistant AI. Use doctor-verified sites. "
-                        "Multiple doctors each give answers: include name + qualification. "
-                        "Provide prescription guidance, safe drug suggestions, and recovery tips. "
-                        "Always include reliable references. Minimum 10 doctors. "
-                        "Each doctor’s headline must be bold."
+                         "You are a medical assistant AI. Use docter varified site to answer."
+                        "multipal doctors each doctor give answers : name and qualification, saparetly give result as prescription guidance, Prescribe drugs and some some guidance to patients for fast recovery,Always include reliable medical references each doctor saparetly. Minimum 10 doctors."
+                        "In answer each doctor head line will be in bold leter"
                     ),
                 },
                 {"role": "user", "content": prompt},
@@ -148,3 +146,4 @@ if st.button("Get Advice"):
             st.markdown(f'<div class="red-flag">- {rf}</div>', unsafe_allow_html=True)
 
         st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
