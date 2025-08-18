@@ -26,4 +26,10 @@ It uses Hugging Face models (via OpenAI-compatible API) to provide safe, doctor-
    ```bash
    git clone https://github.com/your-username/virtual-doctor-assistant.git
    cd virtual-doctor-assistant
+2. Create virtual env:
+    -- python -m venv venv
+     source venv/bin/activate   # Linux/Mac
+     venv\Scripts\activate      # Windows
+
+4. Install dependencies: ---pip install -r requirements.txt
 
