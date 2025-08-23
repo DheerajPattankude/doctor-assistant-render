@@ -147,3 +147,4 @@ if st.button("Get Advice"):
 
         st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
 
+
