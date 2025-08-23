@@ -1,43 +1,23 @@
-# doctor-assistant
-virtual-doctor-assistant/
-│
-├── app.py
-├── requirements.txt
-└── README.md
-# 🩺 Virtual Doctor Assistant
+# Virtual Doctor Assistant
 
-An AI-powered **Virtual Doctor Assistant** built with **Streamlit**, **Hugging Face Inference API**, and **Google Translator + gTTS**.  
-This app allows users to:
-- Enter symptoms and past medical conditions.
-- Receive **doctor-style suggestions** in multiple languages.
-- Get both **text advice** and **audio playback**.
-- See **related AI symptom suggestions**.
-- Be alerted with **emergency red flag warnings**.
+A Streamlit-based virtual doctor assistant that provides AI-generated medical guidance, multi-language support, audio output, and doctor-wise advice boxes.
 
----
+## Features
+- Enter symptoms and previous conditions
+- AI generates advice from multiple doctors in separate colored boxes
+- Related symptom suggestions
+- Multi-language support
+- Audio playback using gTTS
+- Emergency red flags highlighted
 
-## 🚀 Features
-- Multi-language support (English, Hindi, Marathi, Tamil, Telugu, Kannada, Gujarati, Punjabi, Bengali, Malayalam, Urdu).
-- Multiple **doctors’ advice** shown in **separate styled boxes** with doctor names in headers.
-- AI-generated **related symptom suggestions**.
-- **Text and Audio output** (via gTTS).
-- Emergency **Red Flag warnings**.
+## Setup
 
----
-
-## 📦 Installation
-
-1. **Clone repo**
-   ```bash
-   git clone https://github.com/your-repo/virtual-doctor-assistant.git
-   cd virtual-doctor-assistant
-2. Create virtual environment
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # On Linux/Mac
-   venv\Scripts\activate      # On Windows
+1. Clone the repository
+2. Create `.env` file with:
 
 
-3. Install dependencies
-   ```bash
-   pip install -r requirements.txt
+## Deployment on Render
+- Make sure `.env` variables are set in Render dashboard
+- Set start command: `streamlit run app.py`
+- The app will be live with AI doctor advice functionality
+
