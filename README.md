@@ -21,3 +21,6 @@ A Streamlit-based virtual doctor assistant that provides AI-generated medical gu
 - Set start command: `streamlit run app.py`
 - The app will be live with AI doctor advice functionality
 
+## Post-Build Command
+``bash
+ pip install --upgrade pip setuptools wheel
