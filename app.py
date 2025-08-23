@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
-from openai import OpenAI
+#from openai import OpenAI
 from huggingface_hub import InferenceClient
 from deep_translator import GoogleTranslator
 from gtts import gTTS
@@ -261,4 +261,5 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
