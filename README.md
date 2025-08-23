@@ -6,30 +6,38 @@ virtual-doctor-assistant/
 └── README.md
 # 🩺 Virtual Doctor Assistant
 
-An AI-powered **medical assistant web app** built with **Streamlit** and hosted on **Render**.  
-It uses Hugging Face models (via OpenAI-compatible API) to provide safe, doctor-style suggestions.
-
-⚠️ Disclaimer: This app does **not** replace a real doctor. Always consult a qualified physician.
-
----
-
-## 📦 Project Files
-- `app.py` → Main Streamlit app  
-- `requirements.txt` → Dependencies  
-- `README.md` → Setup & deployment guide  
+An AI-powered **Virtual Doctor Assistant** built with **Streamlit**, **Hugging Face Inference API**, and **Google Translator + gTTS**.  
+This app allows users to:
+- Enter symptoms and past medical conditions.
+- Receive **doctor-style suggestions** in multiple languages.
+- Get both **text advice** and **audio playback**.
+- See **related AI symptom suggestions**.
+- Be alerted with **emergency red flag warnings**.
 
 ---
 
-## 🛠️ Run Locally
+## 🚀 Features
+- Multi-language support (English, Hindi, Marathi, Tamil, Telugu, Kannada, Gujarati, Punjabi, Bengali, Malayalam, Urdu).
+- Multiple **doctors’ advice** shown in **separate styled boxes** with doctor names in headers.
+- AI-generated **related symptom suggestions**.
+- **Text and Audio output** (via gTTS).
+- Emergency **Red Flag warnings**.
 
-1. Clone repo:
+---
+
+## 📦 Installation
+
+1. **Clone repo**
    ```bash
-   git clone https://github.com/your-username/virtual-doctor-assistant.git
+   git clone https://github.com/your-repo/virtual-doctor-assistant.git
    cd virtual-doctor-assistant
-2. Create virtual env:
-    -- python -m venv venv
-     source venv/bin/activate   # Linux/Mac
-     venv\Scripts\activate      # Windows
+2. Create virtual environment
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # On Linux/Mac
+   venv\Scripts\activate      # On Windows
 
-4. Install dependencies: ---pip install -r requirements.txt
 
+3. Install dependencies
+   ```bash
+   pip install -r requirements.txt
