@@ -4,6 +4,7 @@ from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
+from huggingface_hub import InferenceClient
 from deep_translator import GoogleTranslator
 from gtts import gTTS
 
@@ -33,29 +34,28 @@ RED_FLAGS = [
 # =========================
 # HUGGING FACE VIA OPENAI CLIENT
 # =========================
-def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cerebras") -> str:
+def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct") -> str:
     if not HF_API_KEY:
         return "❌ Hugging Face API Key missing. Please set HF_API_KEY in your .env file."
     try:
-        client = OpenAI(
-            base_url="https://router.huggingface.co/v1",
-            api_key=HF_API_KEY,
-        )
-        resp = client.chat.completions.create(
+        client = InferenceClient(model=model, token=HF_API_KEY)
+
+        response = client.chat_completion(
             model=model,
             messages=[
                 {"role": "system", "content": (
-                    "You are a medical assistant AI. Use doctor-verified sites to answer. "
-                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance. "
-                    "Prescribe drugs and provide guidance for fast recovery. Always include reliable medical references for each doctor. "
-                    "Minimum 5 doctors. Each doctor suggestion must be prefixed with **Doctor Name (Qualification):**"
+                    "You are a medical assistant AI. Multiple doctors each give answers "
+                    "with name and qualification. Each doctor suggestion in separate box. "
+                    "Prescribe drugs and provide recovery guidance."
                 )},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,
             max_tokens=700,
+            temperature=0.3,
         )
-        return resp.choices[0].message.content.strip()
+
+        return response.choices[0].message["content"].strip()
+
     except Exception as e:
         return f"[HF Chat Error] {e}"
 
@@ -261,3 +261,4 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
