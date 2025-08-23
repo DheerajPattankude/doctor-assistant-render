@@ -46,7 +46,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
             messages=[
                 {"role": "system", "content": (
                     "You are a medical assistant AI. Use doctor-verified sites to answer. "
-                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance, in short and crispe."
+                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance, in short and clear."
                     "Prescribe drugs and provide guidance for fast recovery. Always include reliable medical references for each doctor. Minimum 5 doctors. Each doctor suggestion must be suppareted with box"
                 )},
                 {"role": "user", "content": prompt},
@@ -260,6 +260,7 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
