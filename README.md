@@ -1,27 +1,33 @@
-# Virtual Doctor Assistant
+# 🩺 Virtual Medi Assistant
 
-A Streamlit-based virtual doctor assistant that provides AI-generated medical guidance, multi-language support, audio output, and doctor-wise advice boxes.
+An AI-powered medical assistant built with **Streamlit**, using Hugging Face models via the OpenAI client, with **multi-language translation**, **speech output**, and **AI-driven symptom suggestions**.
 
-## Features
-- Enter symptoms and previous conditions
-- AI generates advice from multiple doctors in separate colored boxes
-- Related symptom suggestions
-- Multi-language support
-- Audio playback using gTTS
-- Emergency red flags highlighted
+---
 
-## Setup
+## 🚀 Features
+- Symptom-based medical guidance (⚠️ not a diagnosis).
+- AI-generated advice from multiple “virtual doctors”.
+- Multi-language support with **Deep Translator**.
+- Audio advice via **gTTS**.
+- AI-driven related symptom suggestions.
+- Styled UI with emergency red flag alerts.
 
-1. Clone the repository
-2. Create `.env` file with:
+---
+
+## 🛠️ Setup & Installation
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/virtual-medi-assistant.git
+cd virtual-medi-assistant
+
+## Create a virtual environment
+```bash
+python -m venv venv
+source venv/bin/activate   # On Mac/Linux
+venv\Scripts\activate      # On Windows
+pip install -r requirements.txt
 
 
-## Deployment on Render
-- Make sure `.env` variables are set in Render dashboard
-- Set start command: `streamlit run app.py`
-- The app will be live with AI doctor advice functionality
-  
-## Post-Build Command
-``bash
-  pip install --upgrade pip setuptools wheel
+
   
