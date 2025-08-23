@@ -20,7 +20,8 @@ A Streamlit-based virtual doctor assistant that provides AI-generated medical gu
 - Make sure `.env` variables are set in Render dashboard
 - Set start command: `streamlit run app.py`
 - The app will be live with AI doctor advice functionality
-
+- pip install runtime.txt
 ## Post-Build Command
 ``bash
   pip install --upgrade pip setuptools wheel
+  
