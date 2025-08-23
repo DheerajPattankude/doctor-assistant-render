@@ -3,9 +3,9 @@ import os
 from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
+from openai import OpenAI
 from deep_translator import GoogleTranslator
 from gtts import gTTS
-from huggingface_hub import InferenceClient
 
 # =========================
 # ENVIRONMENT
@@ -31,27 +31,30 @@ RED_FLAGS = [
 ]
 
 # =========================
-# HUGGING FACE CHAT
+# HUGGING FACE VIA OPENAI CLIENT
 # =========================
-def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct") -> str:
+def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cerebras") -> str:
     if not HF_API_KEY:
         return "❌ Hugging Face API Key missing. Please set HF_API_KEY in your .env file."
     try:
-        client = InferenceClient(token=HF_API_KEY)
-        response = client.chat_completion(
+        client = OpenAI(
+            base_url="https://router.huggingface.co/v1",
+            api_key=HF_API_KEY,
+        )
+        resp = client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": (
-                    "You are a medical assistant AI. Multiple doctors each give answers "
-                    "with name and qualification. Each doctor suggestion in separate box. "
-                    "Prescribe drugs and provide recovery guidance."
+                    "You are a medical assistant AI. Use doctor-verified sites to answer. "
+                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance. "
+                    "Prescribe drugs and provide guidance for fast recovery. Always include reliable medical references for each doctor. Minimum 5 doctors. Each doctor suggestion must be suppareted with box"
                 )},
                 {"role": "user", "content": prompt},
             ],
-            max_tokens=700,
             temperature=0.3,
+            max_tokens=700,
         )
-        return response.choices[0].message["content"].strip()
+        return resp.choices[0].message.content.strip()
     except Exception as e:
         return f"[HF Chat Error] {e}"
 
@@ -139,7 +142,9 @@ st.caption(DISCLAIMER)
 if "symptoms_list" not in st.session_state:
     st.session_state["symptoms_list"] = []
 
+# =========================
 # LAYOUT
+# =========================
 main_col, suggestion_col = st.columns([1.5, 1.5])
 
 # LEFT COLUMN
@@ -198,12 +203,15 @@ with suggestion_col:
     else:
         st.info("AI will suggest related symptoms/questions as you type.")
 
+# =========================
 # DISPLAY ADVICE & RED FLAGS
+# =========================
 if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
     left, right = st.columns(2)
     with left:
         if "advice_text" in st.session_state:
             st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
+
             advice_blocks = st.session_state["advice_text"].split("**Doctor")
             for idx, block in enumerate(advice_blocks):
                 if not block.strip():
@@ -243,6 +251,7 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
             st.subheader("🚨 Emergency Red Flags")
             for rf in RED_FLAGS:
                 st.markdown(
@@ -251,3 +260,5 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+
