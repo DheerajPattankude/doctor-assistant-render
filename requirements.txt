@@ -1,20 +1,6 @@
-# Streamlit for UI
 streamlit==1.27.0
-
-# OpenAI API
-openai==1.40.3
-
-# Hugging Face Hub (latest that works on Python 3.13)
-huggingface-hub>=1.32.0
-
-# Deep Translator
 deep-translator==1.11.4
-
-# Google Text-to-Speech
 gtts>=2.3.2
-
-# Environment variable handling
+huggingface-hub>=1.32.0
 python-dotenv==1.0.0
-
-# HTTP requests
 requests>=2.31.0
