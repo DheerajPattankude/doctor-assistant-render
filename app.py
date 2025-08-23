@@ -46,7 +46,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
             messages=[
                 {"role": "system", "content": (
                     "You are a medical assistant AI. Use doctor-verified sites to answer. "
-                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance. "
+                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance. Genaral guidance."
                     "Prescribe drugs and provide guidance for fast recovery. Always include reliable medical references for each doctor. Minimum 5 doctors. Each doctor suggestion must be suppareted with box"
                 )},
                 {"role": "user", "content": prompt},
@@ -71,7 +71,7 @@ def get_ai_related_symptoms(symptoms, prev_conditions):
     """
     response = call_hf_chat(prompt)
     suggestions = [s.strip() for s in response.replace("\n", ",").split(",") if s.strip()]
-    return suggestions[1:7]
+    return suggestions[2:7]
 
 # =========================
 # TRANSLATION UTILITIES
@@ -260,6 +260,7 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
