@@ -3,10 +3,9 @@ import os
 from datetime import datetime
 import streamlit as st
 from dotenv import load_dotenv
-#from openai import OpenAI
-from huggingface_hub import InferenceClient
 from deep_translator import GoogleTranslator
 from gtts import gTTS
+import requests
 
 # =========================
 # ENVIRONMENT
@@ -32,32 +31,53 @@ RED_FLAGS = [
 ]
 
 # =========================
-# HUGGING FACE VIA OPENAI CLIENT
+# HUGGING FACE VIA DIRECT REQUEST
 # =========================
 def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct") -> str:
+    """
+    Call Hugging Face model using direct HTTP POST (safe for Render deployment).
+    """
     if not HF_API_KEY:
         return "❌ Hugging Face API Key missing. Please set HF_API_KEY in your .env file."
+
+    url = f"https://api-inference.huggingface.co/models/{model}"
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    payload = {
+        "inputs": (
+            "You are a medical assistant AI. Multiple doctors each give answers "
+            "with name and qualification. Each doctor suggestion in separate box. "
+            "Prescribe drugs and provide recovery guidance.\n\n"
+            f"Patient query: {prompt}"
+        ),
+        "parameters": {
+            "max_new_tokens": 700,
+            "temperature": 0.3,
+        }
+    }
+
     try:
-        client = InferenceClient(model=model, token=HF_API_KEY)
+        resp = requests.post(url, headers=headers, json=payload, timeout=60)
 
-        response = client.chat_completion(
-            model=model,
-            messages=[
-                {"role": "system", "content": (
-                    "You are a medical assistant AI. Multiple doctors each give answers "
-                    "with name and qualification. Each doctor suggestion in separate box. "
-                    "Prescribe drugs and provide recovery guidance."
-                )},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=700,
-            temperature=0.3,
-        )
+        if resp.status_code == 404:
+            return (f"[HF Chat Error] 404 Not Found for model '{model}'. "
+                    f"Check the model URL: https://huggingface.co/{model}")
 
-        return response.choices[0].message["content"].strip()
+        if resp.status_code != 200:
+            return f"[HF Chat Error] {resp.status_code} - {resp.text}"
 
-    except Exception as e:
-        return f"[HF Chat Error] {e}"
+        result = resp.json()
+
+        # Many text-generation endpoints return list of dicts with 'generated_text'
+        if isinstance(result, list) and result and "generated_text" in result[0]:
+            return result[0]["generated_text"].strip()
+
+        if isinstance(result, dict) and "error" in result:
+            return f"[HF Chat Error] {result['error']}"
+
+        return str(result)
+
+    except requests.exceptions.RequestException as e:
+        return f"[HF Chat Error] Request failed: {e}"
 
 # =========================
 # AI-DRIVEN RELATED SYMPTOMS
@@ -133,10 +153,12 @@ st.markdown(
     .suggestion-box { background-color: #e0f7fa; border: 2px solid #0284c7; border-radius: 8px; padding: 10px; max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; }
     .suggestion-item { background-color: #ffffff; padding: 6px 10px; border-radius: 20px; border: 1px solid #0284c7; font-size: 14px; flex: 0 0 auto; }
     .suggestion-item:hover { background-color: #b2ebf2; cursor: pointer; }
+    .doctor-box { background-color:#f0fff4; border-left:5px solid #38a169; padding:12px; margin:10px 0; border-radius:10px; }
+    .doctor-header { background-color:#38a169; color:white; padding:6px 12px; border-radius:8px; font-weight:bold; margin-bottom:8px; }
     </style>
     """, unsafe_allow_html=True
 )
-st.title("🩺 Virtual Medi Assistant")
+st.title("🩺 Virtual Doctor Assistant")
 st.caption(DISCLAIMER)
 
 # Initialize session states
@@ -157,6 +179,7 @@ with main_col:
     }
     selected_lang = st.selectbox("🌐 Select output language", list(languages.keys()))
 
+    # USER INPUT SYMPTOMS
     user_input = st.text_area(
         "✍️ Enter your symptoms",
         value=" with ".join(st.session_state["symptoms_list"]),
@@ -171,6 +194,7 @@ with main_col:
         ["Hypertension", "Diabetes", "Asthma", "Heart Disease", "Kidney Disease"]
     )
 
+    # Buttons
     col1, col2 = st.columns(2)
     with col1:
         if st.button("📝 Get Advice (Text)"):
@@ -204,64 +228,30 @@ with suggestion_col:
     else:
         st.info("AI will suggest related symptoms/questions as you type.")
 
-# =========================
 # DISPLAY ADVICE & RED FLAGS
-# =========================
 if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
     left, right = st.columns(2)
     with left:
         if "advice_text" in st.session_state:
-            st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
-
-            advice_blocks = st.session_state["advice_text"].split("**Doctor")
-            for idx, block in enumerate(advice_blocks):
-                if not block.strip():
-                    continue
-                if idx == 0 and not block.startswith("Doctor"):
-                    content = block.strip()
-                    header = "General Advice"
-                else:
-                    content = "**Doctor" + block.strip()
-                    header = content.split("**")[1].strip(":") if "**" in content else "Doctor"
-
-                # Doctor Box with header bar
-                st.markdown(
-                    f"""
-                    <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;">
-                        <div style="background:#38a169;color:white;padding:8px;border-radius:8px 8px 0 0;font-weight:bold;">
-                            {header}
-                        </div>
-                        <div style="background:#f0fff4;padding:15px;border-radius:0 0 8px 8px;">
-                            {content}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
+            st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestion")
+            # Split advice per doctor if line breaks exist
+            doctors = st.session_state["advice_text"].split("\n\n")
+            for doc in doctors:
+                if doc.strip():
+                    st.markdown(
+                        f'<div class="doctor-box"><div class="doctor-header">Doctor</div>{doc}</div>',
+                        unsafe_allow_html=True
+                    )
             st.subheader("🚨 Emergency Red Flags")
             for rf in RED_FLAGS:
-                st.markdown(
-                    f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
-                    f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
-                    unsafe_allow_html=True
-                )
+                st.markdown(f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>', unsafe_allow_html=True)
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-
     with right:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
-
             st.subheader("🚨 Emergency Red Flags")
             for rf in RED_FLAGS:
-                st.markdown(
-                    f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
-                    f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
-                    unsafe_allow_html=True
-                )
+                st.markdown(f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>', unsafe_allow_html=True)
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-
-
-
 
