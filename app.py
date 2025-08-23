@@ -71,7 +71,7 @@ def get_ai_related_symptoms(symptoms, prev_conditions):
     """
     response = call_hf_chat(prompt)
     suggestions = [s.strip() for s in response.replace("\n", ",").split(",") if s.strip()]
-    return suggestions[:5]
+    return suggestions[1:7]
 
 # =========================
 # TRANSLATION UTILITIES
@@ -260,5 +260,6 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
