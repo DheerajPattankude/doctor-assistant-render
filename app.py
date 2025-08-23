@@ -207,7 +207,7 @@ with suggestion_col:
 # DISPLAY ADVICE & RED FLAGS
 # =========================
 if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
-    left, right = st.columns(2)
+    left, right = st.columns([3,1])
     with left:
         if "advice_text" in st.session_state:
             st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
@@ -260,6 +260,7 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
 
 
 
