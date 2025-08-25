@@ -45,11 +45,10 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
         resp = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": (
-                    "You are a medical assistant AI. Use doctor-verified sources. "
-                    "Provide advice as if multiple doctors respond (with name + qualification). "
-                    "Give prescription guidance, drug suggestions, and recovery tips in simple, clear language. "
-                    "Always provide at least 5 doctors. Each doctor suggestion must be shown separately."
+                {"role": "system", "content": ": (
+                    "You are a medical assistant AI. Use doctor-verified sites to answer. "
+                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance."
+                    "Prescribe drugs and provide guidance for fast recovery in simple and clear. Always include reliable medical references for each doctor. Minimum 5 doctors. Each doctor suggestion must be suppareted with box"
                 )},
                 {"role": "user", "content": prompt},
             ],
@@ -273,5 +272,6 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
 
 
