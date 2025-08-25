@@ -52,7 +52,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
-            max_tokens=2500,
+            max_tokens=1200,
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
@@ -74,15 +74,15 @@ def get_ai_related_symptoms(symptoms, prev_conditions):
     return suggestions[2:7]
 
 # =========================
-# TRANSLATION UTILITIES
+# TRANSLATION UTILITIES (Fixed)
 # =========================
 def translate_text(text, target_lang):
     if not text.strip():
         return ""
     try:
         return GoogleTranslator(source="auto", target=target_lang).translate(text)
-    except Exception as e:
-        st.error(f"[Translation Error] {e}")
+    except:
+        # silently return original text if translation fails
         return text
 
 # =========================
@@ -126,9 +126,7 @@ st.set_page_config(page_title="Virtual Doctor Assistant", page_icon="🩺", layo
 st.markdown(
     """
     <style>
-    /* ------------------------
-       Inputs and buttons
-    ------------------------ */
+    /* Inputs and buttons */
     textarea, .stMultiSelect, .stSelectbox {
         background-color: #f0f9ff !important;
         border: 2px solid #0284c7 !important;
@@ -136,7 +134,6 @@ st.markdown(
         padding: 8px !important;
         color: black !important;
     }
-
     .stButton>button {
         background-color: #0284c7;
         color: white;
@@ -145,43 +142,12 @@ st.markdown(
         border: none;
         font-weight: bold;
     }
-    .stButton>button:hover {
-        background-color: #0369a1;
-        color: white;
-    }
+    .stButton>button:hover { background-color: #0369a1; color: white; }
+    .suggestion-box { background-color: #e0f7fa; border: 2px solid #0284c7; border-radius: 8px; padding: 10px; max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; color: black !important; }
+    .suggestion-item { background-color: #ffffff; padding: 6px 10px; border-radius: 20px; border: 1px solid #0284c7; font-size: 14px; flex: 0 0 auto; color: black !important; }
+    .suggestion-item:hover { background-color: #b2ebf2; cursor: pointer; }
 
-    /* ------------------------
-       Suggestion boxes
-    ------------------------ */
-    .suggestion-box {
-        background-color: #e0f7fa;
-        border: 2px solid #0284c7;
-        border-radius: 8px;
-        padding: 10px;
-        max-height: 500px;
-        overflow-y: auto;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        color: black !important;
-    }
-    .suggestion-item {
-        background-color: #ffffff;
-        padding: 6px 10px;
-        border-radius: 20px;
-        border: 1px solid #0284c7;
-        font-size: 14px;
-        flex: 0 0 auto;
-        color: black !important;
-    }
-    .suggestion-item:hover {
-        background-color: #b2ebf2;
-        cursor: pointer;
-    }
-
-    /* ------------------------
-       Dark mode support
-    ------------------------ */
+    /* Dark mode support */
     @media (prefers-color-scheme: dark) {
         body { background-color: #121212; color: #ffffff; }
         textarea, .stMultiSelect, .stSelectbox {
@@ -189,16 +155,8 @@ st.markdown(
             color: #ffffff !important;
             border: 2px solid #0284c7 !important;
         }
-        .suggestion-box {
-            background-color: #263238 !important;
-            color: #ffffff !important;
-            border: 2px solid #0284c7 !important;
-        }
-        .suggestion-item {
-            background-color: #37474f !important;
-            color: #ffffff !important;
-            border: 1px solid #0284c7 !important;
-        }
+        .suggestion-box { background-color: #263238 !important; color: #ffffff !important; border: 2px solid #0284c7 !important; }
+        .suggestion-item { background-color: #37474f !important; color: #ffffff !important; border: 1px solid #0284c7 !important; }
         .suggestion-item:hover { background-color: #455a64 !important; }
         .stButton>button { background-color: #0284c7; color: white; }
         .stButton>button:hover { background-color: #0369a1; }
@@ -328,5 +286,3 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-
-
