@@ -50,6 +50,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
                     "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance."
                     "Prescribe drugs and provide guidance for fast recovery in simple and clear. Always include reliable medical references for each doctor. Minimum 5 doctors. Each doctor suggestion must be suppareted with box"
                 )},
+
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
@@ -65,11 +66,12 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
 def get_ai_related_symptoms(symptoms, prev_conditions):
     if not symptoms.strip():
         return []
-    prompt = f""" 
-    Patient problem: {symptoms}. Previous conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
-    Suggest 5 related symptoms/questions the patient may also consider. 
-    Output plain list (no headings, no extra formatting).
+    prompt = = f""" 
+    The patient problem: {symptoms}. Previous conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
+    Based on the patient problem and previous conditions, suggest 5 related possible symptoms/questions the patient may consider. 
+    Only related symptoms, no headlines needed. They are independent of advice output.
     """
+
     response = call_hf_chat(prompt)
     suggestions = [s.strip() for s in response.replace("\n", ",").split(",") if s.strip()]
     return suggestions[:5]
@@ -103,24 +105,23 @@ def generate_advice(symptoms_input, prev_conditions, selected_lang):
     """
     ai_response = call_hf_chat(user_prompt)
 
-    # Clean raw HTML before translation
+    # Strip HTML/formatting
     ai_response_clean = re.sub(r"</?div.*?>", "", ai_response, flags=re.IGNORECASE)
-    ai_response_clean = re.sub(r"<.*?>", "", ai_response_clean)  # strip all tags
+    ai_response_clean = re.sub(r"<.*?>", "", ai_response_clean)
     ai_response_clean = ai_response_clean.replace("**", "").replace("__", "").strip()
 
-    translated_text = translate_text(ai_response_clean, languages[selected_lang])
-    st.session_state["advice_text"] = translated_text
+    # Store untranslated (so we can split per doctor)
+    st.session_state["advice_text_raw"] = ai_response_clean
+    st.session_state["selected_lang"] = selected_lang
 
-def generate_audio(selected_lang):
+def generate_audio(selected_lang, text):
     languages = {
         "English": "en","Hindi": "hi","Marathi": "mr","Tamil": "ta","Telugu": "te",
         "Kannada": "kn","Gujarati": "gu","Punjabi": "pa","Bengali": "bn",
         "Malayalam": "ml","Urdu": "ur"
     }
-    if "advice_text" not in st.session_state:
-        return
     try:
-        tts = gTTS(st.session_state["advice_text"], lang=languages[selected_lang])
+        tts = gTTS(text, lang=languages[selected_lang])
         audio_file = "output.mp3"
         tts.save(audio_file)
         st.session_state["advice_audio_file"] = audio_file
@@ -209,7 +210,6 @@ with main_col:
                 st.warning("⚠️ Please enter your symptoms.")
             else:
                 generate_advice(" with ".join(st.session_state["symptoms_list"]), prev_conditions, selected_lang)
-                generate_audio(selected_lang)
 
 with suggestion_col:
     st.markdown("### 💡 Related Symptoms (AI Suggestions)")
@@ -231,48 +231,53 @@ with suggestion_col:
 # =========================
 # DISPLAY ADVICE & RED FLAGS
 # =========================
-if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
+if "advice_text_raw" in st.session_state:
     left, right = st.columns([3,1])
     with left:
-        if "advice_text" in st.session_state:
-            st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
+        st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
 
-            advice_blocks = st.session_state["advice_text"].split("Doctor")
-            for idx, block in enumerate(advice_blocks):
-                if not block.strip():
-                    continue
+        advice_blocks = st.session_state["advice_text_raw"].split("Doctor")
+        lang_code = languages[st.session_state["selected_lang"]]
 
-                header = "General Advice" if idx == 0 else f"Doctor {idx}"
-                content_clean = re.sub(r"</?div.*?>", "", block, flags=re.IGNORECASE)
-                content_clean = re.sub(r"<.*?>", "", content_clean)
-                content_clean = content_clean.replace("**", "").replace("__", "").strip()
+        for idx, block in enumerate(advice_blocks):
+            if not block.strip():
+                continue
 
-                html_block = f"""
-                <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;overflow:hidden;">
-                    <div style="background:#38a169;color:white;padding:8px;font-weight:bold;">
-                        {header}
-                    </div>
-                    <div style="background:#f0fff4;padding:15px;">
-                        {content_clean}
-                    </div>
+            header = "General Advice" if idx == 0 else f"Doctor {idx}"
+            content_clean = block.strip()
+
+            # Translate header + content
+            translated_header = translate_text(header, lang_code)
+            translated_content = translate_text(content_clean, lang_code)
+
+            html_block = f"""
+            <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;overflow:hidden;">
+                <div style="background:#38a169;color:white;padding:8px;font-weight:bold;">
+                    {translated_header}
                 </div>
-                """
-                st.markdown(html_block, unsafe_allow_html=True)
+                <div style="background:#f0fff4;padding:15px;">
+                    {translated_content}
+                </div>
+            </div>
+            """
+            st.markdown(html_block, unsafe_allow_html=True)
 
-            st.subheader("🚨 Emergency Red Flags")
-            for rf in RED_FLAGS:
-                st.markdown(
-                    f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
-                    f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
-                    unsafe_allow_html=True
-                )
-            st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+            # Generate audio for each doctor box
+            if "advice_audio_file" not in st.session_state:
+                generate_audio(st.session_state["selected_lang"], translated_content)
+
+        st.subheader("🚨 Emergency Red Flags")
+        for rf in RED_FLAGS:
+            st.markdown(
+                f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
+                f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
+                unsafe_allow_html=True
+            )
+        st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
 
     with right:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
-
-
 
 
