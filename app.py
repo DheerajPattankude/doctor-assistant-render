@@ -66,7 +66,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
 def get_ai_related_symptoms(symptoms, prev_conditions):
     if not symptoms.strip():
         return []
-    prompt = = f""" 
+    prompt = f""" 
     The patient problem: {symptoms}. Previous conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
     Based on the patient problem and previous conditions, suggest 5 related possible symptoms/questions the patient may consider. 
     Only related symptoms, no headlines needed. They are independent of advice output.
@@ -279,5 +279,6 @@ if "advice_text_raw" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
 
 
