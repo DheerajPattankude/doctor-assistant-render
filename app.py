@@ -52,7 +52,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
-            max_tokens=5000,
+            max_tokens=1200,
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
@@ -250,20 +250,18 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     content = "**Doctor" + block.strip()
                     header = content.split("**")[1].strip(":") if "**" in content else "Doctor"
 
-                # Doctor Box with header bar
-                st.markdown(
-                    f"""
-                    <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;">
-                        <div style="background:#38a169;color:white;padding:8px;border-radius:8px 8px 0 0;font-weight:bold;">
-                            {header}
-                        </div>
-                        <div style="background:#f0fff4;padding:15px;border-radius:0 0 8px 8px;">
-                            {content}
-                        </div>
+                # Fixed doctor advice box
+                html_block = f"""
+                <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;overflow:hidden;">
+                    <div style="background:#38a169;color:white;padding:8px;font-weight:bold;">
+                        {header}
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                    <div style="background:#f0fff4;padding:15px;">
+                        {content}
+                    </div>
+                </div>
+                """
+                st.markdown(html_block, unsafe_allow_html=True)
 
             st.subheader("🚨 Emergency Red Flags")
             for rf in RED_FLAGS:
@@ -286,4 +284,6 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
+
 
