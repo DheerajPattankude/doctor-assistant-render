@@ -52,7 +52,7 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
-            max_tokens=1200,
+            max_tokens=5000,
         )
         return resp.choices[0].message.content.strip()
     except Exception as e:
@@ -286,3 +286,4 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
