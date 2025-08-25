@@ -46,11 +46,10 @@ def call_hf_chat(prompt: str, model: str = "meta-llama/Llama-3.1-8B-Instruct:cer
             model=model,
             messages=[
                 {"role": "system", "content": (
-                    "You are a medical assistant AI. Use doctor-verified sites to answer. "
-                    "Multiple doctors each give answers: name and qualification, separately give result as prescription guidance. "
-                    "Prescribe drugs and provide guidance for fast recovery in simple and clear. "
-                    "Always include reliable medical references for each doctor. Minimum 5 doctors. "
-                    "Each doctor suggestion must be separated with box."
+                    "You are a medical assistant AI. Use doctor-verified sources. "
+                    "Provide advice as if multiple doctors respond (with name + qualification). "
+                    "Give prescription guidance, drug suggestions, and recovery tips in simple, clear language. "
+                    "Always provide at least 5 doctors. Each doctor suggestion must be shown separately."
                 )},
                 {"role": "user", "content": prompt},
             ],
@@ -68,24 +67,25 @@ def get_ai_related_symptoms(symptoms, prev_conditions):
     if not symptoms.strip():
         return []
     prompt = f""" 
-    The patient problem: {symptoms}. Previous conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
-    Based on the patient problem and previous conditions, suggest 5 related possible symptoms/questions the patient may consider. 
-    Only related symptoms, no headlines needed. They are independent of advice output.
+    Patient problem: {symptoms}. Previous conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
+    Suggest 5 related symptoms/questions the patient may also consider. 
+    Output plain list (no headings, no extra formatting).
     """
     response = call_hf_chat(prompt)
     suggestions = [s.strip() for s in response.replace("\n", ",").split(",") if s.strip()]
-    return suggestions[2:7]
+    return suggestions[:5]
 
 # =========================
 # TRANSLATION UTILITIES
 # =========================
 def translate_text(text, target_lang):
+    """Translate text safely. If fails, return original without showing UI error."""
     if not text.strip():
         return ""
     try:
         return GoogleTranslator(source="auto", target=target_lang).translate(text)
-    except Exception:
-        # Return original text if translation fails
+    except Exception as e:
+        print(f"[Translation Error] {e}")  # log silently
         return text
 
 # =========================
@@ -100,10 +100,16 @@ def generate_advice(symptoms_input, prev_conditions, selected_lang):
     user_prompt = f"""
     Patient Symptoms: {symptoms_input}.
     Previous Conditions: {', '.join(prev_conditions) if prev_conditions else 'None'}.
-    Provide safe guidance only with correct grammar.
+    Provide safe guidance in clear sentences.
     """
     ai_response = call_hf_chat(user_prompt)
-    translated_text = translate_text(ai_response, languages[selected_lang])
+
+    # Clean raw HTML before translation
+    ai_response_clean = re.sub(r"</?div.*?>", "", ai_response, flags=re.IGNORECASE)
+    ai_response_clean = re.sub(r"<.*?>", "", ai_response_clean)  # strip all tags
+    ai_response_clean = ai_response_clean.replace("**", "").replace("__", "").strip()
+
+    translated_text = translate_text(ai_response_clean, languages[selected_lang])
     st.session_state["advice_text"] = translated_text
 
 def generate_audio(selected_lang):
@@ -120,7 +126,7 @@ def generate_audio(selected_lang):
         tts.save(audio_file)
         st.session_state["advice_audio_file"] = audio_file
     except Exception as e:
-        st.error(f"Audio generation failed: {e}")
+        print(f"[TTS Error] {e}")
 
 # =========================
 # STREAMLIT UI
@@ -130,7 +136,6 @@ st.set_page_config(page_title="Virtual Doctor Assistant", page_icon="🩺", layo
 # CSS: Light/Dark mode safe
 st.markdown("""
 <style>
-/* Inputs */
 textarea, .stMultiSelect, .stSelectbox {
     background-color: #f0f9ff !important;
     border: 2px solid #0284c7 !important;
@@ -138,18 +143,12 @@ textarea, .stMultiSelect, .stSelectbox {
     padding: 8px !important;
     color: black !important;
 }
-[data-baseweb="select"] > div > div {
-    color: black !important;
-}
-
-/* Buttons */
+[data-baseweb="select"] > div > div { color: black !important; }
 .stButton>button {
     background-color: #0284c7; color: white; border-radius: 8px;
     padding: 10px 20px; border: none; font-weight: bold;
 }
 .stButton>button:hover { background-color: #0369a1; color: white; }
-
-/* AI suggestion boxes */
 .suggestion-box { 
     background-color: #e0f7fa; border: 2px solid #0284c7; border-radius: 8px;
     padding: 10px; max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px;
@@ -165,7 +164,9 @@ textarea, .stMultiSelect, .stSelectbox {
 st.title("🩺 Virtual Medi Assistant")
 st.caption(DISCLAIMER)
 
-# Initialize session states
+# =========================
+# SESSION STATE INIT
+# =========================
 if "symptoms_list" not in st.session_state:
     st.session_state["symptoms_list"] = []
 
@@ -174,7 +175,6 @@ if "symptoms_list" not in st.session_state:
 # =========================
 main_col, suggestion_col = st.columns([1.5, 1.5])
 
-# LEFT COLUMN
 with main_col:
     languages = {
         "English": "en","Hindi": "hi","Marathi": "mr","Tamil": "ta","Telugu": "te",
@@ -212,7 +212,6 @@ with main_col:
                 generate_advice(" with ".join(st.session_state["symptoms_list"]), prev_conditions, selected_lang)
                 generate_audio(selected_lang)
 
-# RIGHT COLUMN: AI suggestions
 with suggestion_col:
     st.markdown("### 💡 Related Symptoms (AI Suggestions)")
     suggestions = get_ai_related_symptoms(" with ".join(st.session_state["symptoms_list"]), prev_conditions)
@@ -239,21 +238,15 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
         if "advice_text" in st.session_state:
             st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
 
-            advice_blocks = st.session_state["advice_text"].split("**Doctor")
+            advice_blocks = st.session_state["advice_text"].split("Doctor")
             for idx, block in enumerate(advice_blocks):
                 if not block.strip():
                     continue
 
-                if idx == 0 and not block.startswith("Doctor"):
-                    content = block.strip()
-                    header = "General Advice"
-                else:
-                    content = "**Doctor" + block.strip()
-                    header = content.split("**")[1].strip(":") if "**" in content else "Doctor"
-
-                # CLEAN HTML and Markdown
-                content_clean = re.sub(r"</?div.*?>", "", content, flags=re.IGNORECASE).strip()
-                content_clean = content_clean.replace("**", "")
+                header = "General Advice" if idx == 0 else f"Doctor {idx}"
+                content_clean = re.sub(r"</?div.*?>", "", block, flags=re.IGNORECASE)
+                content_clean = re.sub(r"<.*?>", "", content_clean)
+                content_clean = content_clean.replace("**", "").replace("__", "").strip()
 
                 html_block = f"""
                 <div style="border:2px solid #38a169;border-radius:10px;margin:10px 0;overflow:hidden;">
@@ -281,11 +274,4 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
 
-            st.subheader("🚨 Emergency Red Flags")
-            for rf in RED_FLAGS:
-                st.markdown(
-                    f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
-                    f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
-                    unsafe_allow_html=True
-                )
-            st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+
