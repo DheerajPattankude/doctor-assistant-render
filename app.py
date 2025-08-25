@@ -126,12 +126,83 @@ st.set_page_config(page_title="Virtual Doctor Assistant", page_icon="🩺", layo
 st.markdown(
     """
     <style>
-    textarea, .stMultiSelect, .stSelectbox { background-color: #f0f9ff !important; border: 2px solid #0284c7 !important; border-radius: 10px !important; padding: 8px !important; }
-    .stButton>button { background-color: #0284c7; color: white; border-radius: 8px; padding: 10px 20px; border: none; font-weight: bold; }
-    .stButton>button:hover { background-color: #0369a1; color: white; }
-    .suggestion-box { background-color: #e0f7fa; border: 2px solid #0284c7; border-radius: 8px; padding: 10px; max-height: 500px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; }
-    .suggestion-item { background-color: #ffffff; padding: 6px 10px; border-radius: 20px; border: 1px solid #0284c7; font-size: 14px; flex: 0 0 auto; }
-    .suggestion-item:hover { background-color: #b2ebf2; cursor: pointer; }
+    /* ------------------------
+       Inputs and buttons
+    ------------------------ */
+    textarea, .stMultiSelect, .stSelectbox {
+        background-color: #f0f9ff !important;
+        border: 2px solid #0284c7 !important;
+        border-radius: 10px !important;
+        padding: 8px !important;
+        color: black !important;
+    }
+
+    .stButton>button {
+        background-color: #0284c7;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        border: none;
+        font-weight: bold;
+    }
+    .stButton>button:hover {
+        background-color: #0369a1;
+        color: white;
+    }
+
+    /* ------------------------
+       Suggestion boxes
+    ------------------------ */
+    .suggestion-box {
+        background-color: #e0f7fa;
+        border: 2px solid #0284c7;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        color: black !important;
+    }
+    .suggestion-item {
+        background-color: #ffffff;
+        padding: 6px 10px;
+        border-radius: 20px;
+        border: 1px solid #0284c7;
+        font-size: 14px;
+        flex: 0 0 auto;
+        color: black !important;
+    }
+    .suggestion-item:hover {
+        background-color: #b2ebf2;
+        cursor: pointer;
+    }
+
+    /* ------------------------
+       Dark mode support
+    ------------------------ */
+    @media (prefers-color-scheme: dark) {
+        body { background-color: #121212; color: #ffffff; }
+        textarea, .stMultiSelect, .stSelectbox {
+            background-color: #1e1e1e !important;
+            color: #ffffff !important;
+            border: 2px solid #0284c7 !important;
+        }
+        .suggestion-box {
+            background-color: #263238 !important;
+            color: #ffffff !important;
+            border: 2px solid #0284c7 !important;
+        }
+        .suggestion-item {
+            background-color: #37474f !important;
+            color: #ffffff !important;
+            border: 1px solid #0284c7 !important;
+        }
+        .suggestion-item:hover { background-color: #455a64 !important; }
+        .stButton>button { background-color: #0284c7; color: white; }
+        .stButton>button:hover { background-color: #0369a1; }
+    }
     </style>
     """, unsafe_allow_html=True
 )
@@ -211,11 +282,9 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
     with left:
         if "advice_text" in st.session_state:
             st.markdown("### 🧑‍⚕️ Virtual Doctor Assistant Suggestions")
-
             advice_blocks = st.session_state["advice_text"].split("**Doctor")
             for idx, block in enumerate(advice_blocks):
-                if not block.strip():
-                    continue
+                if not block.strip(): continue
                 if idx == 0 and not block.startswith("Doctor"):
                     content = block.strip()
                     header = "General Advice"
@@ -251,7 +320,6 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
-
             st.subheader("🚨 Emergency Red Flags")
             for rf in RED_FLAGS:
                 st.markdown(
@@ -260,14 +328,3 @@ if "advice_text" in st.session_state or "advice_audio_file" in st.session_state:
                     unsafe_allow_html=True
                 )
             st.caption("Generated on " + datetime.now().strftime("%Y-%m-%d %H:%M"))
-
-
-
-
-
-
-
-
-
-
-
