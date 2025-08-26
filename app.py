@@ -137,7 +137,7 @@ st.set_page_config(page_title="Virtual Doctor Assistant", page_icon="🩺", layo
 st.markdown("""
 <style>
 textarea, .stMultiSelect, .stSelectbox {
-    background-color: #f0f9ff !important;
+    background-color: #FFE5B4 !important;
     border: 2px solid #0284c7 !important;
     border-radius: 10px !important;
     padding: 8px !important;
@@ -279,6 +279,7 @@ if "advice_text_raw" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
 
 
 
