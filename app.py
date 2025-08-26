@@ -255,7 +255,7 @@ if "advice_text_raw" in st.session_state:
                 <div style="background:#38a169;color:white;padding:8px;font-weight:bold;">
                     {translated_header}
                 </div>
-                <div style="background:#008080;padding:15px;">
+                <div style="background:#E0FFFF;padding:15px;">
                     {translated_content}
                 </div>
             </div>
@@ -279,6 +279,7 @@ if "advice_text_raw" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
 
 
 
