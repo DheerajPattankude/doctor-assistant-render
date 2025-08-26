@@ -255,7 +255,7 @@ if "advice_text_raw" in st.session_state:
                 <div style="background:#38a169;color:white;padding:8px;font-weight:bold;">
                     {translated_header}
                 </div>
-                <div style="background:#4169E1;padding:15px;">
+                <div style="background:#FFFF00;padding:15px;">
                     {translated_content}
                 </div>
             </div>
@@ -269,7 +269,7 @@ if "advice_text_raw" in st.session_state:
         st.subheader("🚨 Emergency Red Flags")
         for rf in RED_FLAGS:
             st.markdown(
-                f'<div style="background:#fffaf0;border-left:5px solid #dd6b20;'
+                f'<div style="background:#FFFF00;border-left:5px solid #dd6b20;'
                 f'padding:8px;margin:5px 0;border-radius:8px;">- {rf}</div>',
                 unsafe_allow_html=True
             )
@@ -279,6 +279,7 @@ if "advice_text_raw" in st.session_state:
         if "advice_audio_file" in st.session_state:
             st.markdown("### 🔊 Audio Advice")
             st.audio(st.session_state["advice_audio_file"], format="audio/mp3")
+
 
 
 
